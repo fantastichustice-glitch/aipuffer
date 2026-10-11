@@ -1,558 +1,195 @@
 <!doctype html>
-<html lang="ko">
-<head>
-<meta charset="utf-8" />
-<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no" />
-<title>온라인 장기 — P2P</title>
+<html lang="ko"><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>복어 수영 대회</title>
 <style>
-  :root{--bg:#0f172a;--panel:#111827;--panel2:#1f2937;--line:#374151;--text:#f8fafc;--muted:#94a3b8;--accent:#22c55e;--warn:#f59e0b;--danger:#ef4444;--board:#d7b26d;--board2:#c79d55;--grid:#5b4630;--red:#b91c1c;--blue:#1d4ed8;--gold:#e9c46a;--ink:#3f2c1e;--cream:#f8e7b5;}
-  *{box-sizing:border-box} body{margin:0;background:radial-gradient(circle at top,#18233b 0,#0f172a 55%);color:var(--text);font-family:Arial,"Malgun Gothic","Noto Sans KR",sans-serif;min-height:100vh}
-  button,input,textarea{font:inherit;font-family:inherit} button{cursor:pointer;border:0;border-radius:10px;padding:10px 14px;background:#334155;color:#fff;font-weight:700} button:hover{filter:brightness(1.08)} button:disabled{opacity:.45;cursor:not-allowed;filter:none}
-  .primary{background:var(--accent);color:#06240f}.danger{background:var(--danger)}.secondary{background:#475569}.ghost{background:transparent;border:1px solid #475569}.small{padding:7px 9px;font-size:13px}
-  .wrap{max-width:1180px;margin:0 auto;padding:18px}.top{display:flex;gap:12px;align-items:center;justify-content:space-between;margin-bottom:14px}.title{font-size:26px;font-weight:900;letter-spacing:-.03em}.subtitle{font-size:13px;color:var(--muted);margin-top:2px}
-  .status{display:flex;gap:8px;align-items:center;flex-wrap:wrap}.pill{padding:7px 10px;border-radius:999px;background:#1e293b;border:1px solid #334155;font-size:13px}.dot{width:9px;height:9px;border-radius:50%;display:inline-block;background:#64748b;margin-right:5px}.dot.ok{background:#22c55e;box-shadow:0 0 12px #22c55e}.dot.bad{background:#ef4444}
-  .layout{display:grid;grid-template-columns:minmax(0,1fr) 340px;gap:16px;align-items:start}.card{background:rgba(17,24,39,.88);border:1px solid #253047;border-radius:16px;box-shadow:0 18px 50px rgba(0,0,0,.25)}
-  .board-card{padding:16px;overflow:hidden}.board-head{display:flex;justify-content:space-between;align-items:center;gap:12px;margin-bottom:12px}.board-head-left{min-width:0}.turnline{display:flex;align-items:center;gap:9px;flex-wrap:wrap}.turn-badge{display:inline-flex;align-items:center;gap:6px;padding:5px 9px;border-radius:999px;background:#0b1220;border:1px solid #334155;font-size:12px;color:#e2e8f0}.turn-badge .mini-dot{width:7px;height:7px;border-radius:50%;display:inline-block}.mini-red{background:#60a5fa}.mini-blue{background:#ef4444}.move-counter{font-size:12px;color:#94a3b8}.side-labels{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin:0 0 10px}.side-label{display:flex;align-items:center;justify-content:space-between;padding:8px 10px;border:1px solid #334155;background:#0b1220;border-radius:11px;font-size:12px}.side-label.active{border-color:#60a5fa;box-shadow:0 0 0 1px rgba(96,165,250,.15),0 0 20px rgba(96,165,250,.07)}.side-label .name{font-weight:900}.side-label .captured{font-size:11px;color:#94a3b8}.side-label.red .name{color:#60a5fa}.side-label.blue .name{color:#f87171}.turn{font-size:17px;font-weight:900}.notice{font-size:13px;color:#cbd5e1;min-height:20px}.board-wrap{display:flex;justify-content:center}.board{position:relative;width:min(92vw,760px);aspect-ratio:9/10;background:radial-gradient(circle at 30% 20%,rgba(255,255,255,.18),transparent 24%),repeating-linear-gradient(8deg,rgba(91,70,48,.035) 0 2px,transparent 2px 8px),linear-gradient(135deg,var(--board),var(--board2));border-radius:12px;border:7px solid #704d2a;box-shadow:inset 0 0 0 2px #eed49a,inset 0 0 30px rgba(61,39,20,.14),0 16px 38px rgba(0,0,0,.32);user-select:none;touch-action:none;}
-  .board-grid{position:absolute;inset:5% 4% 5% 4%;overflow:visible;z-index:2}.board-grid::before{content:"";position:absolute;inset:0;background-image:linear-gradient(to right,transparent 0,transparent calc(100% - 1px),var(--grid) calc(100% - 1px),var(--grid) 100%),linear-gradient(to bottom,transparent 0,transparent calc(100% - 1px),var(--grid) calc(100% - 1px),var(--grid) 100%);background-size:calc(100% / 8) calc(100% / 9);pointer-events:none}
-  .palace-lines{position:absolute;inset:0;width:100%;height:100%;pointer-events:none;z-index:8;overflow:visible}.palace-lines line{stroke:#4a3523;stroke-width:.085;vector-effect:non-scaling-stroke;stroke-linecap:round;filter:drop-shadow(0 0 .6px rgba(255,241,200,.45))}
-  .cell{position:absolute;width:calc(100% / 9);height:calc(100% / 10);transform:translate(-50%,-50%);display:flex;align-items:center;justify-content:center;z-index:2}.cell:hover{z-index:4}.cell.last-from::after,.cell.last-to::after{content:"";position:absolute;width:72%;height:72%;border-radius:50%;border:2px solid rgba(20,83,45,.6);pointer-events:none}.cell.last-to::after{border-color:rgba(146,64,14,.72);box-shadow:0 0 0 4px rgba(146,64,14,.08)}.cell.highlight::before,.cell.capture::before{content:"";position:absolute;width:34%;height:34%;border-radius:50%;background:rgba(34,197,94,.35);box-shadow:0 0 0 2px rgba(34,197,94,.65)}.cell.capture::before{background:rgba(239,68,68,.3);box-shadow:0 0 0 2px rgba(239,68,68,.75)}
-  .piece{width:74%;height:74%;max-width:58px;max-height:58px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:clamp(19px,3vw,30px);font-weight:900;background:radial-gradient(circle at 35% 28%,#fff8de 0 20%,#f2d994 58%,#d6ae62 100%);border:2px solid #76552d;box-shadow:0 5px 8px rgba(0,0,0,.3),inset 0 0 0 2px #fff5cf,inset 0 0 0 4px rgba(113,75,34,.08);position:relative;z-index:3;transition:transform .12s ease,box-shadow .12s ease,filter .12s ease}.piece::after{content:"";position:absolute;inset:7%;border-radius:50%;border:1px solid rgba(118,85,45,.28);pointer-events:none}.piece:hover{transform:translateY(-2px);box-shadow:0 8px 12px rgba(0,0,0,.32),inset 0 0 0 2px #fff5cf}.piece.red{color:var(--blue)}.piece.blue{color:var(--red)}
-  /* 장기알끼리 서로 다른 서체 */
-  .piece.type-K,.mini-piece.type-K{font-family:"Gungsuh","궁서체","BatangChe","Batang",serif!important;font-weight:950}
-  .piece.type-A,.mini-piece.type-A{font-family:"Batang","바탕체","Noto Serif KR","Nanum Myeongjo",serif!important;font-weight:800}
-  .piece.type-E,.mini-piece.type-E{font-family:"Nanum Myeongjo","Noto Serif KR","Batang",serif!important;font-weight:900}
-  .piece.type-H,.mini-piece.type-H{font-family:"Malgun Gothic","맑은 고딕","Noto Sans KR",sans-serif!important;font-weight:900}
-  .piece.type-R,.mini-piece.type-R{font-family:"Dotum","돋움","Arial Unicode MS",sans-serif!important;font-weight:900}
-  .piece.type-C,.mini-piece.type-C{font-family:"Gulim","굴림","Malgun Gothic","Noto Sans KR",sans-serif!important;font-weight:900}
-  .piece.type-P,.mini-piece.type-P{font-family:"Noto Serif KR","Nanum Myeongjo","Batang",serif!important;font-weight:900}
-  .piece.general{font-size:clamp(22px,3.5vw,34px);letter-spacing:-.08em}.piece.sel{outline:4px solid rgba(34,197,94,.85);transform:scale(1.08);box-shadow:0 0 0 7px rgba(34,197,94,.12),0 8px 14px rgba(0,0,0,.34),inset 0 0 0 2px #fff5cf}.piece.red.general{background:radial-gradient(circle at 35% 28%,#fff8de 0 20%,#dfe8fa 58%,#9eb5d5 100%)}.piece.blue.general{background:radial-gradient(circle at 35% 28%,#fff8de 0 20%,#f3d7cf 58%,#cf9b8e 100%)}.piece.sel{outline:4px solid rgba(34,197,94,.85);transform:scale(1.06)}
-  .coord{font-size:10px;color:rgba(55,43,28,.65);position:absolute;pointer-events:none}.rank{position:absolute;left:-19px}.file{position:absolute;bottom:-18px}
-  .side{display:flex;flex-direction:column;gap:12px}.section{padding:14px}.section h3{margin:0 0 8px;font-size:15px}.row{display:flex;gap:8px;align-items:center}.row>*{min-width:0}.stack{display:flex;flex-direction:column;gap:8px}.muted{color:var(--muted);font-size:12px;line-height:1.45}.codebox{width:100%;min-height:96px;resize:vertical;background:#0b1220;color:#dbeafe;border:1px solid #334155;border-radius:10px;padding:9px;font-family:ui-monospace,SFMono-Regular,Consolas,monospace;font-size:12px}.input{width:100%;background:#0b1220;color:#fff;border:1px solid #334155;border-radius:10px;padding:10px}.divider{height:1px;background:#243044;margin:8px 0}.log{max-height:210px;overflow:auto;background:#0b1220;border:1px solid #263246;border-radius:10px;padding:8px;font-size:12px;line-height:1.6}.log .move-row{display:grid;grid-template-columns:34px 1fr;gap:7px;padding:3px 1px}.log .move-no{color:#64748b;text-align:right}.capture-tray{display:flex;justify-content:space-between;gap:8px;padding:8px 10px;background:#0b1220;border:1px solid #263246;border-radius:10px}.captured-group{min-width:0}.captured-title{font-size:10px;color:#64748b;margin-bottom:4px}.captured-pieces{display:flex;gap:2px;flex-wrap:wrap;min-height:24px}.mini-piece{width:25px;height:25px;border-radius:50%;display:inline-flex;align-items:center;justify-content:center;font-size:13px;font-weight:900;background:#f2d994;border:1px solid #76552d}.mini-piece.red{color:var(--blue)}.mini-piece.blue{color:var(--red)}.empty-capture{font-size:11px;color:#475569;line-height:25px}.log .system{color:#93c5fd}.log .warn{color:#fbbf24}.log .bad{color:#fca5a5}
-  .actions{display:grid;grid-template-columns:1fr 1fr;gap:8px}.actions .wide{grid-column:1/-1}.rules{max-height:230px;overflow:auto;color:#cbd5e1;font-size:12px;line-height:1.55}.footer{margin-top:12px;color:#64748b;font-size:11px;text-align:center}
-  .hidden{display:none!important}.modal{position:fixed;inset:0;background:rgba(0,0,0,.65);display:flex;align-items:center;justify-content:center;padding:16px;z-index:100}.modal-card{max-width:720px;width:100%;background:#111827;border:1px solid #334155;border-radius:16px;padding:18px}.modal-card h2{margin-top:0}.mono{font-family:ui-monospace,SFMono-Regular,Consolas,monospace}
-  @media(max-width:920px){.layout{grid-template-columns:1fr}.side{grid-row:2}.board{width:min(96vw,720px)}.top{align-items:flex-start;flex-direction:column}.status{width:100%}}
-</style>
-</head>
-<body>
-<div class="wrap">
-  <div class="top">
-    <div><div class="title">🏮 온라인 장기 <span style="font-size:13px;color:#93c5fd">P2P</span></div><div class="subtitle">게임 서버 없이 WebRTC로 두 브라우저가 직접 대국합니다.</div></div>
-    <div class="status"><span class="pill"><span id="connDot" class="dot"></span><span id="connText">연결 안 됨</span></span><span class="pill" id="rolePill">역할: -</span><span class="pill" id="sidePill">진영: -</span></div>
-  </div>
+:root{--bg:#e9f6ff;--fg:#0f3350;--panel:#fff;--line:#b7d7ec;--w1:#d4f0ff;--w2:#86cbf0;--ac:#e8478a;--mut:#58768c;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--bg:#0b1a26;--fg:#e3f1fb;--panel:#132b3d;--line:#274a63;--w1:#1a5877;--w2:#0e3a55;--mut:#8fb0c6}}
+:root[data-theme="dark"]{--bg:#0b1a26;--fg:#e3f1fb;--panel:#132b3d;--line:#274a63;--w1:#1a5877;--w2:#0e3a55;--mut:#8fb0c6}
+html{scroll-padding-top:env(safe-area-inset-top,0px)}
+body{margin:0;background:var(--bg);color:var(--fg);font:16px/1.5 system-ui,-apple-system,"Apple SD Gothic Neo","Noto Sans KR",sans-serif}
+.wrap{max-width:880px;margin:0 auto;padding:14px}
+h1{font-size:26px;margin:6px 0 12px}
+.card{background:var(--panel);border:1px solid var(--line);border-radius:14px;padding:14px;margin-bottom:12px}
+.mut{color:var(--mut)}.small{font-size:13px}
+input[type=text],textarea{width:100%;box-sizing:border-box;border:1px solid var(--line);border-radius:10px;padding:9px;background:var(--bg);color:var(--fg);font:inherit}
+textarea{height:64px;font:12px monospace;word-break:break-all}
+button{border:0;border-radius:10px;padding:10px 16px;background:var(--ac);color:#fff;font:700 15px inherit;cursor:pointer}
+button.alt{background:#2a7fb8}button:active{transform:scale(.96)}
+.row{display:flex;gap:8px;flex-wrap:wrap;align-items:center;margin:10px 0}
+.slot{border-top:1px dashed var(--line);padding:10px 0}.slot label{display:block;font-size:13px;color:var(--mut);margin:6px 0 3px}
+.lane{position:relative;height:104px;margin:8px 0;border-radius:14px;overflow:hidden;background:linear-gradient(90deg,var(--w1),var(--w2));border:1px solid var(--line)}
+.lane:after{content:"";position:absolute;right:20px;top:0;bottom:0;width:8px;background:repeating-linear-gradient(#111 0 8px,#fff 8px 16px)}
+.lane.won{outline:4px solid gold;outline-offset:-4px}
+.nm{position:absolute;left:12px;top:6px;font-weight:700;z-index:2}
+.fin{position:absolute;right:42px;top:6px;font-size:13px;z-index:2}
+.fish{position:absolute;top:30px;width:90px;left:calc((100% - 112px)*var(--p)/100);transition:left .09s linear,transform .08s;animation:bob 1.1s ease-in-out infinite alternate}
+@keyframes bob{to{translate:0 -5px}}
+@media (prefers-reduced-motion:reduce){.fish{animation:none}}
+.win{position:absolute;right:42px;bottom:6px;padding:5px 10px;font-size:13px}
+#ov{text-align:center;font-size:30px;font-weight:800;min-height:44px}
+#pad{display:flex;gap:10px;margin-top:10px}
+#pad button{flex:1;font-size:32px;padding:22px 0;background:#2a7fb8;touch-action:manipulation;user-select:none}
+#pad button.next{background:var(--ac)}
+</style></head><body><div class="wrap">
+<h1>🐡 복어 수영 대회</h1>
 
-  <div class="layout">
-    <section class="card board-card">
-      <div class="board-head"><div class="board-head-left"><div class="turnline"><div id="turnText" class="turn">먼저 방을 연결하세요.</div><span id="turnBadge" class="turn-badge hidden"><span class="mini-dot mini-red"></span><span>초 선공</span></span><span id="moveCounter" class="move-counter">수 0</span></div><div id="notice" class="notice">방 만들기 또는 방 참가로 시작합니다.</div></div><button id="resignBtn" class="danger small" disabled>기권</button></div>
-      <div id="sideLabels" class="side-labels"><div id="redLabel" class="side-label red"><span class="name">🔵 초</span><span class="captured">잡은 기물 0</span></div><div id="blueLabel" class="side-label blue"><span class="name">🔴 한</span><span class="captured">잡은 기물 0</span></div></div><div class="board-wrap"><div id="board" class="board">
-        <div class="board-grid" id="grid">
-          <svg class="palace-lines" viewBox="0 0 8 9" preserveAspectRatio="none" aria-hidden="true">
-            <!-- 궁성 대각선: 각 3×3 궁성을 정확히 가로지르는 X -->
-            <g aria-hidden="true">
-              <line x1="3" y1="0" x2="5" y2="2" />
-              <line x1="5" y1="0" x2="3" y2="2" />
-              <line x1="3" y1="7" x2="5" y2="9" />
-              <line x1="5" y1="7" x2="3" y2="9" />
-            </g>
-          </svg>
-        </div>
-      </div></div>
-      <div class="footer">초 = 파랑 · 한 = 빨강 · 클릭으로 기물을 선택하고 목적지를 클릭하세요.</div>
-    </section>
+<section id="home" class="card">
+ <p>A · D 키를 번갈아 빠르게 연타해서 헤엄치세요! 우승자는 방장(심판)이 정합니다.</p>
+ <input type="text" id="nm" placeholder="닉네임" maxlength="8">
+ <label class="small"><input type="checkbox" id="spec"> 방장은 심판만 하고 헤엄치지 않기</label>
+ <div class="row"><button id="bHost">방 만들기 (방장)</button><button id="bJoin" class="alt">참가하기</button></div>
+ <p class="mut small">서버 없이 WebRTC P2P로 연결해요. 방장이 만든 초대 코드를 참가자에게 전달하면, 참가자가 응답 코드를 돌려줘서 연결됩니다. (최대 5명)</p>
+</section>
 
-    <aside class="side">
-      <section class="card section">
-        <h3>🔌 P2P 연결</h3>
-        <div class="stack">
-          <button id="createBtn" class="primary">방 만들기</button>
-          <button id="joinBtn" class="secondary">방 참가하기</button>
-          <button id="helpBtn" class="ghost">연결 방법 보기</button>
-          <div id="signalArea" class="hidden">
-            <div class="divider"></div>
-            <div id="signalStep" class="muted"></div>
-            <textarea id="signalInput" class="codebox" placeholder="상대에게 받은 연결 코드를 붙여 넣으세요."></textarea>
-            <div class="row"><button id="signalApplyBtn" class="primary" style="flex:1">코드 적용</button><button id="copySignalBtn" class="small" disabled>내 코드 복사</button></div>
-            <textarea id="signalOutput" class="codebox" placeholder="여기에 내 연결 코드가 나타납니다." readonly></textarea>
-          </div>
-          <div class="muted">※ 게임 서버는 사용하지 않습니다. 다만 인터넷에서 P2P 연결 성공률을 높이기 위해 공개 STUN 서버를 연결 보조로 사용할 수 있습니다. 장기 수/상태는 서버에 저장되지 않습니다.</div>
-        </div>
-      </section>
+<section id="join" class="card" hidden>
+ <b>참가하기</b>
+ <p class="small mut">① 방장에게 받은 초대 코드를 붙여넣고 ② 만들어진 응답 코드를 방장에게 보내세요.</p>
+ <textarea id="offerIn" placeholder="초대 코드 붙여넣기"></textarea>
+ <div class="row"><button id="mkAns">응답 코드 만들기</button></div>
+ <textarea id="ansOut" readonly placeholder="여기에 응답 코드가 생겨요 (클릭하면 복사)"></textarea>
+ <p class="small mut" id="jst"></p>
+</section>
 
-      <section class="card section">
-        <h3>🎮 대국</h3>
-        <div class="actions">
-          <button id="rematchBtn" disabled>재대국 요청</button>
-          <button id="resetUiBtn" class="ghost">화면 새로고침</button>
-        </div>
-        <div class="divider"></div>
-        <div id="rematchStatus" class="muted">대국 종료 후 재대국을 요청할 수 있습니다.</div>
-      </section>
-
-      <section class="card section"><h3>📜 대국 기록</h3><div id="moveLog" class="log"></div><div class="divider"></div><div class="capture-tray"><div class="captured-group"><div class="captured-title">초가 잡은 기물</div><div id="redCaptured" class="captured-pieces"><span class="empty-capture">없음</span></div></div><div class="captured-group"><div class="captured-title">한이 잡은 기물</div><div id="blueCaptured" class="captured-pieces"><span class="empty-capture">없음</span></div></div></div><div class="divider"></div><div id="log" class="log" style="max-height:110px"></div></section>
-
-      <section class="card section">
-        <h3>📖 적용 규칙</h3>
-        <div class="rules">
-          차·마·상·포·졸/병·사·왕(장/한)의 기본적인 한국 장기 이동 규칙을 적용합니다.<br>
-          포는 반드시 한 개의 기물을 뛰어야 하며 포를 뛰거나 포를 잡을 수 없습니다.<br>
-          마·상은 중간 경로가 막히면 움직일 수 없습니다.<br>
-          왕/사는 자기 궁 안에서 움직이고 궁성의 대각선도 사용할 수 있습니다.<br>
-          장군은 상대 왕을 공격하는 상태이며, 그 상태에서 상대에게 합법적인 수가 없으면 외통수로 종료합니다.<br>
-          서버 없는 P2P 특성상 호스트 브라우저가 닫히면 방도 종료됩니다.
-        </div>
-      </section>
-    </aside>
-  </div>
+<section id="game" hidden>
+ <div class="card" id="hostPanel" hidden>
+  <b>참가자 연결</b> <span class="small mut">(초대 코드를 보내고, 받은 응답 코드를 붙여넣은 뒤 연결)</span>
+  <div id="slots"></div>
+  <button id="addSlot" class="alt">+ 참가자 추가</button>
+ </div>
+ <div class="row"><button id="bStart">🏁 시작</button><button id="bReset" class="alt">처음으로</button><span id="info" class="mut small"></span></div>
+ <div id="ov"></div>
+ <div id="lanes"></div>
+ <div id="pad"><button id="kA">A</button><button id="kD">D</button></div>
+</section>
 </div>
-
-<div id="helpModal" class="modal hidden">
-  <div class="modal-card">
-    <h2>🔌 P2P 연결 방법</h2>
-    <p><b>1. 방장</b>은 <b>방 만들기</b>를 누르고 생성된 <b>내 코드</b>를 친구에게 보냅니다.</p>
-    <p><b>2. 참가자</b>는 <b>방 참가하기</b>을 누르고 방장의 코드를 입력한 다음 <b>코드 적용</b>을 누릅니다. 그러면 참가자용 응답 코드가 생성됩니다.</p>
-    <p><b>3. 참가자</b>는 응답 코드를 다시 방장에게 보냅니다.</p>
-    <p><b>4. 방장</b>은 받은 응답 코드를 붙여 넣고 <b>코드 적용</b>을 누릅니다. 연결되면 자동으로 초/한이 배정되고 대국이 시작됩니다.</p>
-    <div class="divider"></div>
-    <p class="muted">이 방식은 시그널링 서버 없이 사람이 연결 정보를 전달합니다. WebRTC 특성상 일부 엄격한 NAT/방화벽 환경에서는 직접 연결이 실패할 수 있습니다.</p>
-    <button id="closeHelp" class="primary">확인</button>
-  </div>
-</div>
-
 <script>
-'use strict';
+const FISH="data:image/webp;base64,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";
+const $=s=>document.querySelector(s);
+const CFG={iceServers:[{urls:'stun:stun.l.google.com:19302'}]};
+let me={id:null,name:'',host:false,spec:false};
+let S={phase:'lobby',count:0,winner:null,players:{}};
+let peers=[],hostDC=null,nextId=1;
+let pos=0,vel=0,fin=null,lastKey=null,raceStart=0,tilt=0;
 
-// =========================
-// WebRTC
-// =========================
-// 게임 서버는 없습니다. STUN은 연결 후보를 찾는 "보조" 역할입니다.
-const RTC_CONFIG = {
-  iceServers: [
-    { urls: 'stun:stun.l.google.com:19302' },
-    { urls: 'stun:stun1.l.google.com:19302' }
-  ]
+const waitIce=pc=>new Promise(r=>{if(pc.iceGatheringState==='complete')return r();const t=setTimeout(r,3500);pc.addEventListener('icegatheringstatechange',()=>{if(pc.iceGatheringState==='complete'){clearTimeout(t);r()}})});
+const code=pc=>btoa(JSON.stringify(pc.localDescription));
+const send=(dc,m)=>{if(dc&&dc.readyState==='open')dc.send(JSON.stringify(m))};
+const copyEl=el=>{el.select();try{document.execCommand('copy')}catch(e){}};
+const showGame=()=>{$('#home').hidden=$('#join').hidden=true;$('#game').hidden=false};
+
+/* ---------- 방장 ---------- */
+$('#bHost').onclick=()=>{
+  me={id:0,name:$('#nm').value.trim()||'방장',host:true,spec:$('#spec').checked};
+  if(!me.spec)S.players[0]={name:me.name,pos:0,fin:null};
+  showGame();$('#hostPanel').hidden=false;addSlot();
+  setInterval(()=>peers.forEach(p=>send(p.dc,{t:'state',s:S})),80);
 };
-
-const $ = id => document.getElementById(id);
-const boardEl = $('board'), gridEl = $('grid');
-const turnText = $('turnText'), noticeEl = $('notice'), logEl = $('log');
-const connDot = $('connDot'), connText = $('connText'), rolePill = $('rolePill'), sidePill = $('sidePill');
-const resignBtn = $('resignBtn'), rematchBtn = $('rematchBtn'), rematchStatus = $('rematchStatus');
-const turnBadge=$('turnBadge'), moveCounter=$('moveCounter'), redLabel=$('redLabel'), blueLabel=$('blueLabel'), moveLog=$('moveLog'), redCaptured=$('redCaptured'), blueCaptured=$('blueCaptured');
-const signalArea = $('signalArea'), signalStep = $('signalStep'), signalInput = $('signalInput'), signalOutput = $('signalOutput');
-const createBtn = $('createBtn'), joinBtn = $('joinBtn'), signalApplyBtn = $('signalApplyBtn'), copySignalBtn = $('copySignalBtn');
-
-let role = null; // host | guest
-let side = null; // red | blue
-let pc = null;
-let dc = null;
-let iceMode = true;
-let heartbeatTimer = null;
-let lastPong = Date.now();
-let pendingSignalMode = null; // host-answer | guest-offer
-let pendingLocalCode = '';
-let selected = null;
-let state = null;
-
-const PIECES = {
-  red:  { K:'將', G:'士', R:'車', C:'包', H:'馬', E:'象', S:'卒' },
-  blue: { K:'帥', G:'士', R:'車', C:'包', H:'馬', E:'象', S:'兵' }
+async function addSlot(){
+  if(peers.length>=4)return;
+  const p={id:nextId++,pc:new RTCPeerConnection(CFG)};peers.push(p);
+  p.dc=p.pc.createDataChannel('g');
+  p.dc.onmessage=e=>hRecv(p,JSON.parse(e.data));
+  p.dc.onopen=()=>p.st.textContent='✅ 연결됨';
+  p.dc.onclose=()=>drop(p);
+  const el=p.el=document.createElement('div');el.className='slot';
+  el.innerHTML=`<b>참가자</b> <span class="st small">대기중</span><label>① 초대 코드 (클릭하면 복사)</label><textarea class="off" readonly>생성 중…</textarea><label>② 참가자의 응답 코드 붙여넣기</label><textarea class="ans"></textarea><div class="row"><button class="con alt">연결</button></div>`;
+  $('#slots').append(el);p.st=el.querySelector('.st');
+  el.querySelector('.off').onclick=e=>copyEl(e.target);
+  el.querySelector('.con').onclick=async()=>{try{await p.pc.setRemoteDescription(JSON.parse(atob(el.querySelector('.ans').value.trim())));p.st.textContent='연결 중…'}catch(e){alert('응답 코드를 확인하세요')}};
+  $('#addSlot').hidden=peers.length>=4;
+  await p.pc.setLocalDescription(await p.pc.createOffer());await waitIce(p.pc);
+  el.querySelector('.off').value=code(p.pc);
+}
+$('#addSlot').onclick=addSlot;
+function drop(p){delete S.players[p.id];peers=peers.filter(x=>x!==p);p.el.remove();$('#addSlot').hidden=false}
+function hRecv(p,m){
+  if(m.t==='hello'){S.players[p.id]={name:m.name,pos:0,fin:null};send(p.dc,{t:'welcome',id:p.id})}
+  else if(m.t==='pos'&&S.players[p.id]&&S.phase==='race'){S.players[p.id].pos=m.pos;S.players[p.id].fin=m.fin}
+}
+function resetPlayers(){Object.values(S.players).forEach(p=>{p.pos=0;p.fin=null});pos=vel=0;fin=null;lastKey=null;S.winner=null}
+$('#bStart').onclick=()=>{
+  resetPlayers();S.phase='count';S.count=3;
+  const iv=setInterval(()=>{if(--S.count<=0){clearInterval(iv);S.phase='race';raceStart=performance.now()}},1000);
 };
+$('#bReset').onclick=()=>{resetPlayers();S.phase='lobby'};
+function pick(id){S.winner=id;S.phase='done'}
 
-const HOME_Y = { red: 9, blue: 0 };
-const DIR = { red: -1, blue: 1 };
-
-function log(msg, cls='') {
-  const d = document.createElement('div');
-  d.className = cls; d.textContent = msg; logEl.appendChild(d); logEl.scrollTop = logEl.scrollHeight;
-}
-function setConnection(ok, text) {
-  connDot.className = 'dot ' + (ok ? 'ok' : 'bad');
-  connText.textContent = text;
-}
-function setRole(r, s) {
-  role = r; side = s;
-  rolePill.textContent = '역할: ' + (r==='host'?'방장':'참가자');
-  sidePill.textContent = '진영: ' + (s==='red'?'초':'한');
-}
-function emptyBoard() {
-  const b = Array.from({length:10},()=>Array(9).fill(null));
-  const put = (x,y,side,type)=>b[y][x]={side,type};
-
-  // 한국 장기 표준 초반 배치(원앙마 차림)
-  // 궁은 궁성의 2선 중앙에 두고, 뒷줄 중앙은 비워 둡니다.
-  // 한(위): 1선 = 차-마-상-사-빈칸-사-상-마-차
-  //          2선 = 중앙에 궁
-  //          3선 = 양쪽 포
-  //          4선 = 5개 병
-  // 초(아래)도 대칭 배치합니다.
-  const back = ['R','H','E','G',null,'G','E','H','R'];
-  back.forEach((t,x)=>{ if(t) put(x,0,'blue',t); });
-  put(4,1,'blue','K');
-  [1,7].forEach(x=>put(x,2,'blue','C'));
-  [0,2,4,6,8].forEach(x=>put(x,3,'blue','S'));
-
-  [0,2,4,6,8].forEach(x=>put(x,6,'red','S'));
-  [1,7].forEach(x=>put(x,7,'red','C'));
-  put(4,8,'red','K');
-  back.forEach((t,x)=>{ if(t) put(x,9,'red',t); });
-
-  return b;
-}
-function initialState(){
-  return {board:emptyBoard(),turn:'red',status:'playing',winner:null,check:null,lastMove:null,moveNo:0,history:[],captured:{red:[],blue:[]},rematch:{red:false,blue:false}};
-}
-function pieceLabel(p){return p?PIECES[p.side][p.type]:''}
-function capturedByColor(color){return state?.captured?.[color]||[];}
-function renderCaptured(el, pieces){
-  el.innerHTML='';
-  if(!pieces.length){const s=document.createElement('span');s.className='empty-capture';s.textContent='없음';el.appendChild(s);return;}
-  for(const p of pieces){const d=document.createElement('span');d.className='mini-piece '+p.side+' type-'+p.type;d.textContent=pieceLabel(p);d.title=pieceLabel(p);el.appendChild(d);}
-}
-function countCaptured(color){return capturedByColor(color).length;}
-
-
-// Fix the grid cell creation; 9x10 intersections.
-function buildGrid(){
-  gridEl.innerHTML='';
-  for(let y=0;y<10;y++) for(let x=0;x<9;x++){
-    const cell=document.createElement('div'); cell.className='cell'; cell.dataset.x=x; cell.dataset.y=y;
-    cell.style.left=(x/8*100)+'%'; cell.style.top=(y/9*100)+'%';
-    cell.addEventListener('click',()=>onCellClick(x,y)); gridEl.appendChild(cell);
-  }
-}
-function cellAt(x,y){return gridEl.querySelector(`.cell[data-x="${x}"][data-y="${y}"]`)}
-
-function deepCloneBoard(b){return b.map(r=>r.map(p=>p?{...p}:null));}
-function inBoard(x,y){return x>=0&&x<9&&y>=0&&y<10}
-function inPalace(side,x,y){return x>=3&&x<=5 && (side==='blue'?y>=0&&y<=2:y>=7&&y<=9)}
-function diagStepInPalace(side,x1,y1,x2,y2){
-  if(!inPalace(side,x1,y1)||!inPalace(side,x2,y2)) return false;
-  if(Math.abs(x2-x1)!==1||Math.abs(y2-y1)!==1) return false;
-  const cy=side==='blue'?1:8;
-  return Math.abs(x1-4)===Math.abs(y1-cy) && Math.abs(x2-4)===Math.abs(y2-cy);
-}
-function palaceRayAllowed(side,x1,y1,x2,y2){
-  if(!inPalace(side,x1,y1)||!inPalace(side,x2,y2)) return false;
-  if(x1===x2||y1===y2) return false;
-  const cy=side==='blue'?1:8;
-  return Math.abs(x1-4)===Math.abs(y1-cy) && Math.abs(x2-4)===Math.abs(y2-cy) && Math.abs(x2-x1)===Math.abs(y2-y1);
-}
-function stepsOnLine(x1,y1,x2,y2){
-  const dx=Math.sign(x2-x1),dy=Math.sign(y2-y1); const n=Math.max(Math.abs(x2-x1),Math.abs(y2-y1));
-  const arr=[]; for(let i=1;i<n;i++) arr.push([x1+dx*i,y1+dy*i]); return arr;
-}
-function pathClear(b,x1,y1,x2,y2){return stepsOnLine(x1,y1,x2,y2).every(([x,y])=>!b[y][x]);}
-function countBetween(b,x1,y1,x2,y2){return stepsOnLine(x1,y1,x2,y2).filter(([x,y])=>!!b[y][x]).length}
-
-function pseudoMoves(b,x,y,ignoreTarget=false){
-  const p=b[y]?.[x]; if(!p) return [];
-  const out=[];
-  const push=(tx,ty,kind='normal')=>{if(inBoard(tx,ty)) out.push({x:tx,y:ty,kind})};
-  const side=p.side, dir=DIR[side], type=p.type;
-  if(type==='S'){
-    push(x,y+dir); push(x-1,y); push(x+1,y);
-    const oppPal=side==='red'?'blue':'red';
-    if(inPalace(oppPal,x,y) && inPalace(oppPal,x+1,y+dir)) push(x+1,y+dir);
-    if(inPalace(oppPal,x,y) && inPalace(oppPal,x-1,y+dir)) push(x-1,y+dir);
-  } else if(type==='K' || type==='G'){
-    const ds=[[1,0],[-1,0],[0,1],[0,-1],[1,1],[1,-1],[-1,1],[-1,-1]];
-    for(const [dx,dy] of ds){
-      const tx=x+dx,ty=y+dy;
-      if((dx===0||dy===0) ? inPalace(side,tx,ty) : diagStepInPalace(side,x,y,tx,ty)) push(tx,ty);
-    }
-  } else if(type==='R'){
-    for(const [dx,dy] of [[1,0],[-1,0],[0,1],[0,-1]]){
-      let tx=x+dx,ty=y+dy;
-      while(inBoard(tx,ty)){
-        push(tx,ty); if(b[ty][tx]) break; tx+=dx;ty+=dy;
-      }
-    }
-    // Palace diagonal ray.
-    const cy=side==='blue'?1:8;
-    for(const [dx,dy] of [[1,1],[1,-1],[-1,1],[-1,-1]]){
-      let tx=x+dx,ty=y+dy;
-      while(inBoard(tx,ty)&&palaceRayAllowed(side,x,y,tx,ty)){
-        push(tx,ty); if(b[ty][tx]) break; tx+=dx;ty+=dy;
-      }
-    }
-  } else if(type==='C'){
-    const rays=[];
-    for(const [dx,dy] of [[1,0],[-1,0],[0,1],[0,-1]]) rays.push([dx,dy]);
-    const cy=side==='blue'?1:8;
-    for(const [dx,dy] of [[1,1],[1,-1],[-1,1],[-1,-1]]){
-      let tx=x+dx,ty=y+dy;
-      while(inBoard(tx,ty)&&palaceRayAllowed(side,x,y,tx,ty)){rays.push([dx,dy]);break;}
-    }
-    for(const [dx,dy] of rays){
-      let tx=x+dx,ty=y+dy,seen=false;
-      while(inBoard(tx,ty)){
-        if(!seen){ if(b[ty][tx]){ if(b[ty][tx].type==='C') break; seen=true; tx+=dx;ty+=dy;continue;} }
-        else {
-          if(b[ty][tx]) { if(b[ty][tx].type!=='C') push(tx,ty,'capture'); break; }
-          push(tx,ty);
-        }
-        tx+=dx;ty+=dy;
-      }
-    }
-  } else if(type==='H'){
-    const patterns=[[1,2],[2,1],[-1,2],[-2,1],[1,-2],[2,-1],[-1,-2],[-2,-1]];
-    for(const [dx,dy] of patterns){
-      const adx=Math.abs(dx),ady=Math.abs(dy);
-      const bx=x+(adx===1?dx:0), by=y+(ady===1?dy:0);
-      // The first orthogonal leg is blocked.
-      if(!b[by]?.[bx]) push(x+dx,y+dy);
-    }
-  } else if(type==='E'){
-    const pats=[[2,3],[3,2],[-2,3],[-3,2],[2,-3],[3,-2],[-2,-3],[-3,-2]];
-    for(const [dx,dy] of pats){
-      const sx=Math.sign(dx),sy=Math.sign(dy), adx=Math.abs(dx),ady=Math.abs(dy);
-      let b1,b2;
-      if(adx===2){b1=[x+sx,y]; b2=[x+sx,y+sy];}
-      else {b1=[x,y+sy]; b2=[x+sx,y+sy];}
-      if(!b[b1[1]]?.[b1[0]] && !b[b2[1]]?.[b2[0]]) push(x+dx,y+dy);
-    }
-  }
-  return out.filter(m=>inBoard(m.x,m.y) && (ignoreTarget || !b[m.y][m.x] || b[m.y][m.x].side!==side));
-}
-
-function generalsFacing(b){
-  let rk=null,bk=null;
-  for(let y=0;y<10;y++) for(let x=0;x<9;x++){ const p=b[y][x]; if(!p||p.type!=='K') continue; if(p.side==='red') rk=[x,y]; else bk=[x,y]; }
-  if(!rk||!bk||rk[0]!==bk[0]) return false;
-  return pathClear(b,rk[0],rk[1],bk[0],bk[1]);
-}
-function isSquareAttacked(b,x,y,bySide){
-  // General-to-general line attack.
-  let gx=null;
-  for(let yy=0;yy<10;yy++) for(let xx=0;xx<9;xx++) if(b[yy][xx]?.side===bySide&&b[yy][xx].type==='K') gx=[xx,yy];
-  if(gx && gx[0]===x && pathClear(b,gx[0],gx[1],x,y) && inBoard(x,y)) return true;
-  for(let yy=0;yy<10;yy++) for(let xx=0;xx<9;xx++){
-    const p=b[yy][xx]; if(!p||p.side!==bySide) continue;
-    const moves=pseudoMoves(b,xx,yy,true);
-    if(moves.some(m=>m.x===x&&m.y===y)) return true;
-  }
-  return false;
-}
-function generalPos(b,side){for(let y=0;y<10;y++)for(let x=0;x<9;x++)if(b[y][x]?.side===side&&b[y][x].type==='K')return[x,y]; return null;}
-function inCheck(b,side){const g=generalPos(b,side); if(!g) return true; return isSquareAttacked(b,g[0],g[1],side==='red'?'blue':'red');}
-function applyMoveToBoard(b,fx,fy,tx,ty){const nb=deepCloneBoard(b); nb[ty][tx]=nb[fy][fx]; nb[fy][fx]=null; return nb;}
-function legalMovesFrom(b,x,y){
-  const p=b[y]?.[x]; if(!p) return [];
-  return pseudoMoves(b,x,y).filter(m=>{
-    const target=b[m.y][m.x]; if(target?.type==='K') return false; // checkmate is represented by no legal replies.
-    const nb=applyMoveToBoard(b,x,y,m.x,m.y);
-    return !inCheck(nb,p.side);
-  });
-}
-function isLegalMove(b,fx,fy,tx,ty){return legalMovesFrom(b,fx,fy).some(m=>m.x===tx&&m.y===ty)}
-function hasAnyLegalMove(b,side){for(let y=0;y<10;y++)for(let x=0;x<9;x++){if(b[y][x]?.side===side && legalMovesFrom(b,x,y).length)return true;} return false;}
-function notationMove(p,fx,fy,tx,ty){return `${p.side==='red'?'초':'한'} ${p.type} ${fx+1},${10-fy} → ${tx+1},${10-ty}`}
-
-function drawBoard(){
-  const cells=gridEl.querySelectorAll('.cell'); cells.forEach(c=>{c.classList.remove('highlight','capture','last-from','last-to');c.innerHTML='';});
-  if(!state){ turnBadge.classList.add('hidden'); moveCounter.textContent='수 0'; return; }
-  if(state.lastMove){
-    cellAt(state.lastMove.from.x,state.lastMove.from.y)?.classList.add('last-from');
-    cellAt(state.lastMove.to.x,state.lastMove.to.y)?.classList.add('last-to');
-  }
-  for(let y=0;y<10;y++) for(let x=0;x<9;x++){
-    const c=cellAt(x,y); if(!c) continue;
-    const p=state.board[y][x];
-    if(p){const d=document.createElement('div');d.className='piece '+(p.side==='red'?'red':'blue')+' type-'+p.type+(p.type==='K'?' general':'');if(selected&&selected.x===x&&selected.y===y)d.classList.add('sel');const label=PIECES[p.side][p.type];d.textContent=label;d.setAttribute('aria-label',p.type==='K'?(p.side==='red'?'초의 궁':'한의 궁'):label);d.title=p.type==='K'?(p.side==='red'?'초의 궁':'한의 궁'):label;c.appendChild(d);}
-  }
-  if(selected){for(const m of legalMovesFrom(state.board,selected.x,selected.y)){const c=cellAt(m.x,m.y);if(c)c.classList.add(state.board[m.y][m.x]?'capture':'highlight')}}
-  const turnSide=state.turn;
-  turnBadge.classList.remove('hidden'); turnBadge.querySelector('.mini-dot').className='mini-dot '+(turnSide==='red'?'mini-red':'mini-blue'); turnBadge.querySelector('span:last-child').textContent=(turnSide==='red'?'🔵 초 선공':'🔴 한 차례');
-  moveCounter.textContent='수 '+state.moveNo;
-  turnText.textContent = state.status==='playing' ? `${state.turn==='red'?'초':'한'} 차례${side===state.turn?' — 내 차례!':' — 상대 차례'}` : (state.winner?`대국 종료 — ${state.winner==='red'?'초':'한'} 승리`:'대국 종료');
-  const currentRed=side==='red'; const currentBlue=side==='blue'; redLabel.classList.toggle('active',state.status==='playing'&&turnSide==='red'); blueLabel.classList.toggle('active',state.status==='playing'&&turnSide==='blue');
-  redLabel.querySelector('.captured').textContent='잡은 기물 '+countCaptured('red'); blueLabel.querySelector('.captured').textContent='잡은 기물 '+countCaptured('blue');
-  renderCaptured(redCaptured,capturedByColor('red')); renderCaptured(blueCaptured,capturedByColor('blue'));
-  moveLog.innerHTML='';
-  const hist=state.history||[];
-  if(!hist.length){moveLog.innerHTML='<div class="muted">아직 착수가 없습니다.</div>';} else hist.forEach((h,i)=>{const r=document.createElement('div');r.className='move-row';const n=document.createElement('div');n.className='move-no';n.textContent=(i+1)+'.';const t=document.createElement('div');t.textContent=h.text+(h.captured?' × '+pieceLabel(h.captured):'');if(h.check)t.textContent+=' '+h.check;r.append(n,t);moveLog.appendChild(r);});
-  resignBtn.disabled=state.status!=='playing'||!dc||dc.readyState!=='open';
-  rematchBtn.disabled=state.status!=='finished'||!dc||dc.readyState!=='open';
-  rematchStatus.textContent = state.status==='finished' ? `재대국: 초 ${state.rematch.red?'✅':'⬜'} · 한 ${state.rematch.blue?'✅':'⬜'}` : '대국 종료 후 재대국을 요청할 수 있습니다.';
-}
-function setNotice(t){noticeEl.textContent=t}
-
-function snapshot(){return JSON.stringify(state)}
-function send(obj){if(dc&&dc.readyState==='open') dc.send(JSON.stringify(obj));}
-function broadcast(){send({type:'STATE',state});}
-
-function hostApplyMove(from,to){
-  if(!state||state.status!=='playing') return false;
-  const p=state.board[from.y][from.x]; if(!p||p.side!==state.turn) return false;
-  if(!isLegalMove(state.board,from.x,from.y,to.x,to.y)) return false;
-  const captured=state.board[to.y][to.x] ? {...state.board[to.y][to.x]} : null;
-  const nb=applyMoveToBoard(state.board,from.x,from.y,to.x,to.y);
-  state.board=nb; state.lastMove={from,to}; state.moveNo++; state.turn=state.turn==='red'?'blue':'red';
-  if(captured) state.captured[p.side].push(captured);
-  const mover=p.side; const enemy=state.turn;
-  state.check=inCheck(state.board,enemy)?enemy:null;
-  const any=hasAnyLegalMove(state.board,enemy);
-  let resultTag='';
-  if(!any){ state.status='finished'; state.winner=mover; resultTag='외통'; setNotice(`${mover==='red'?'초':'한'}의 외통수!`); }
-  else if(state.check){ resultTag='장군'; setNotice(`${enemy==='red'?'초':'한'} 장군!`); }
-  else setNotice('');
-  state.history.push({text:notationMove(p,from.x,from.y,to.x,to.y),captured,check:resultTag});
-  state.rematch={red:false,blue:false};
-  broadcast(); drawBoard();
-  log(notationMove(p,from.x,from.y,to.x,to.y));
-  return true;
-}
-
-function localSelect(x,y){
-  if(!state||state.status!=='playing'||!side) return;
-  const p=state.board[y][x];
-  if(selected){
-    if(selected.x===x&&selected.y===y){selected=null;drawBoard();return;}
-    if(p&&p.side===side){selected={x,y};drawBoard();return;}
-    if(side!==state.turn){setNotice('지금은 상대 차례입니다.');return;}
-    if(role==='host'){
-      if(hostApplyMove(selected,{x,y})) selected=null,drawBoard();
-      else setNotice('그 수는 둘 수 없습니다.');
-    }else{
-      if(isLegalMove(state.board,selected.x,selected.y,x,y)){
-        send({type:'MOVE',from:selected,to:{x,y}}); setNotice('상대에게 착수를 전송했습니다.'); selected=null;drawBoard();
-      }else setNotice('그 수는 둘 수 없습니다.');
-    }
-  }else if(p&&p.side===side&&side===state.turn){selected={x,y};drawBoard();}
-}
-function onCellClick(x,y){localSelect(x,y)}
-
-function resetClientState(){state=initialState();selected=null;drawBoard();}
-
-async function waitIceGathering(pc, timeout=8000){
-  if(pc.iceGatheringState==='complete') return;
-  await new Promise(resolve=>{
-    let done=false;
-    const finish=()=>{if(done)return;done=true;pc.removeEventListener('icegatheringstatechange',check);resolve()};
-    const check=()=>{if(pc.iceGatheringState==='complete')finish()};
-    pc.addEventListener('icegatheringstatechange',check); setTimeout(finish,timeout);
-  });
-}
-function encodeSignal(obj){
-  const s=JSON.stringify(obj); return btoa(unescape(encodeURIComponent(s))).replace(/\+/g,'-').replace(/\//g,'_').replace(/=+$/,'');
-}
-function decodeSignal(str){
-  try{const s=atob(str.trim().replace(/-/g,'+').replace(/_/g,'/') + '==='.slice((str.length+3)%4)); return JSON.parse(decodeURIComponent(escape(s)));}catch(e){throw new Error('연결 코드 형식이 올바르지 않습니다.');}}
-
-async function makeHost(){
-  cleanupPeer(); role='host'; side='red'; setRole('host','red'); resetClientState();
-  pc=new RTCPeerConnection(RTC_CONFIG); dc=pc.createDataChannel('janggi',{ordered:true}); setupDataChannel();
-  pc.onconnectionstatechange=handleConnState;
-  pc.oniceconnectionstatechange=handleIceState;
-  const offer=await pc.createOffer(); await pc.setLocalDescription(offer); await waitIceGathering(pc);
-  pendingSignalMode='host-answer'; pendingLocalCode=encodeSignal({type:'offer',sdp:pc.localDescription});
-  showSignal('친구에게 아래 <b>내 코드</b>를 보내고, 친구가 돌려준 <b>응답 코드</b>를 아래 입력칸에 붙여 넣으세요.',pendingLocalCode);
-  setConnection(false,'연결 대기'); setNotice('친구가 응답 코드를 보내면 적용하세요.'); log('방 생성: 초 배정','system');
-}
-async function makeGuestFromOffer(code){
-  cleanupPeer(); role='guest'; side='blue'; setRole('guest','blue'); resetClientState();
-  const offer=decodeSignal(code); if(offer.type!=='offer') throw new Error('방장용 offer 코드가 아닙니다.');
-  pc=new RTCPeerConnection(RTC_CONFIG); pc.ondatachannel=e=>{dc=e.channel;setupDataChannel()}; pc.onconnectionstatechange=handleConnState; pc.oniceconnectionstatechange=handleIceState;
-  await pc.setRemoteDescription(offer.sdp); const ans=await pc.createAnswer(); await pc.setLocalDescription(ans); await waitIceGathering(pc);
-  pendingSignalMode='guest-offer'; pendingLocalCode=encodeSignal({type:'answer',sdp:pc.localDescription});
-  showSignal('생성된 <b>응답 코드</b>를 방장에게 보내세요. 방장이 적용하면 연결됩니다.',pendingLocalCode); setConnection(false,'응답 생성'); log('방 참가: 한 배정','system');
-}
-async function applyHostAnswer(code){
-  if(!pc||role!=='host') throw new Error('먼저 방을 만들어야 합니다.');
-  const ans=decodeSignal(code); if(ans.type!=='answer') throw new Error('참가자 응답 코드가 아닙니다.');
-  await pc.setRemoteDescription(ans.sdp); signalApplyBtn.disabled=true; setNotice('응답 적용 완료. P2P 연결 중...'); log('응답 코드 적용','system');
-}
-
-function showSignal(step,output=''){
-  signalArea.classList.remove('hidden'); signalStep.innerHTML=step; signalInput.value=''; signalOutput.value=output; copySignalBtn.disabled=!output; signalApplyBtn.disabled=false;
-}
-function setupDataChannel(){
-  if(!dc) return;
-  dc.onopen=()=>{setConnection(true,'연결됨'); lastPong=Date.now(); startHeartbeat(); signalArea.classList.add('hidden'); setNotice(role==='host'?'연결 완료 — 초가 선공입니다.':'연결 완료 — 한이 초의 수를 기다립니다.'); log('P2P 연결 성공','system');
-    if(role==='host'){broadcast();} else send({type:'HELLO',role:'guest'}); drawBoard();
-  };
-  dc.onclose=()=>{setConnection(false,'연결 종료');stopHeartbeat();setNotice('상대 연결이 끊어졌습니다.');log('상대 연결 종료','bad');drawBoard()};
-  dc.onerror=()=>{log('데이터 채널 오류','bad')};
-  dc.onmessage=e=>handleMessage(e.data);
-}
-function handleConnState(){
-  if(!pc)return; const s=pc.connectionState;
-  if(s==='connected'){setConnection(true,'연결됨')}
-  else if(['failed','closed','disconnected'].includes(s)){setConnection(false,s==='failed'?'연결 실패':'연결 종료');stopHeartbeat();}
-}
-function handleIceState(){
-  if(!pc)return; const s=pc.iceConnectionState;
-  if(s==='failed') {setConnection(false,'ICE 연결 실패'); log('직접 P2P 연결에 실패했습니다. 다른 네트워크에서 다시 시도해 보세요.','bad');}
-}
-function startHeartbeat(){stopHeartbeat();heartbeatTimer=setInterval(()=>{
-  if(!dc||dc.readyState!=='open') return;
-  send({type:'PING',t:Date.now()});
-  if(Date.now()-lastPong>12000){setConnection(false,'응답 없음');setNotice('상대방의 응답이 없습니다. 연결이 끊길 수 있습니다.');}
-},3000)}
-function stopHeartbeat(){if(heartbeatTimer){clearInterval(heartbeatTimer);heartbeatTimer=null}}
-
-function handleMessage(raw){
-  let m; try{m=JSON.parse(raw)}catch{return}
-  lastPong=Date.now();
-  if(m.type==='PING'){send({type:'PONG',t:m.t});return}
-  if(m.type==='PONG'){return}
-  if(m.type==='HELLO'){ if(role==='host'&&state) broadcast(); return; }
-  if(role==='host'){
-    if(m.type==='MOVE'){
-      if(state.status!=='playing'||state.turn!=='blue'){send({type:'ERROR',msg:'지금은 한 차례가 아닙니다.'});return;}
-      if(hostApplyMove(m.from,m.to)) log('상대(한)의 착수를 반영했습니다.','system'); else send({type:'ERROR',msg:'유효하지 않은 수입니다.'});
-    } else if(m.type==='RESIGN'){
-      if(state.status==='playing'){state.status='finished';state.winner='red';state.check=null;broadcast();drawBoard();setNotice('한의 기권으로 초 승리');log('상대가 기권했습니다.','warn');}
-    } else if(m.type==='REMATCH'){
-      state.rematch.blue=true; broadcast(); drawBoard(); maybeRestart();
-    }
-  } else {
-    if(m.type==='STATE'){state=m.state;selected=null;drawBoard();updateGuestNotice();}
-    else if(m.type==='ERROR'){setNotice(m.msg||'요청이 거부되었습니다.');log(m.msg||'요청 거부','warn');}
-  }
-}
-function updateGuestNotice(){
-  if(!state)return;
-  if(state.status==='finished'){setNotice(`${state.winner==='red'?'초':'한'} 승리 — 재대국을 선택하세요.`);}
-  else if(state.check) setNotice(`${state.check==='red'?'초':'한'} 장군!`); else setNotice('');
-}
-function resign(){
-  if(!state||state.status!=='playing')return;
-  if(!confirm('정말 기권할까요?'))return;
-  if(role==='host'){
-    state.status='finished';state.winner='blue';state.check=null;broadcast();drawBoard();setNotice('초의 기권으로 한 승리');log('내가 기권했습니다.','warn');
-  }else{send({type:'RESIGN'});resignBtn.disabled=true;setNotice('기권 요청을 전송했습니다.');}
-}
-function requestRematch(){
-  if(!state||state.status!=='finished'||!dc||dc.readyState!=='open')return;
-  state.rematch[side]=true;
-  rematchBtn.disabled=true;
-  if(role==='host'){broadcast();drawBoard();maybeRestart();} else {send({type:'REMATCH'});setNotice('재대국 동의 전송');}
-  drawBoard();
-}
-function maybeRestart(){
-  if(role==='host' && state.rematch.red && state.rematch.blue){state=initialState();broadcast();drawBoard();setNotice('재대국 시작! 초 선공');log('재대국 시작','system');}
-}
-function cleanupPeer(){stopHeartbeat();try{dc?.close()}catch{} try{pc?.close()}catch{} dc=null;pc=null;pendingSignalMode=null;pendingLocalCode='';}
-
-// UI wiring
-createBtn.onclick=()=>makeHost().catch(e=>{log(e.message||String(e),'bad');alert(e.message||String(e))});
-joinBtn.onclick=()=>{role='guest';side='blue';setRole('guest','blue');signalArea.classList.remove('hidden');signalStep.innerHTML='방장의 <b>offer 코드</b>를 입력하고 적용하면 응답 코드가 생성됩니다.';signalInput.value='';signalOutput.value='';pendingSignalMode='guest-offer';signalApplyBtn.disabled=false;copySignalBtn.disabled=true;resetClientState();setNotice('방장 코드를 기다리는 중입니다.');};
-signalApplyBtn.onclick=()=>{
-  const code=signalInput.value.trim(); if(!code){alert('코드를 입력하세요.');return;}
-  (async()=>{
-    try{
-      if(pendingSignalMode==='guest-offer'){await makeGuestFromOffer(code)}
-      else if(pendingSignalMode==='host-answer'){await applyHostAnswer(code)}
-    }catch(e){alert(e.message||String(e));log(e.message||String(e),'bad')}
-  })();
+/* ---------- 참가자 ---------- */
+$('#bJoin').onclick=()=>{$('#home').hidden=true;$('#join').hidden=false};
+$('#ansOut').onclick=e=>copyEl(e.target);
+$('#mkAns').onclick=async()=>{
+  try{
+    me.name=$('#nm').value.trim()||'참가자';
+    const pc=new RTCPeerConnection(CFG);
+    pc.ondatachannel=e=>{hostDC=e.channel;
+      hostDC.onopen=()=>{send(hostDC,{t:'hello',name:me.name});showGame();$('#bStart').hidden=$('#bReset').hidden=true};
+      hostDC.onmessage=e=>gRecv(JSON.parse(e.data));
+      hostDC.onclose=()=>{alert('방장과 연결이 끊겼어요');location.reload()}};
+    await pc.setRemoteDescription(JSON.parse(atob($('#offerIn').value.trim())));
+    await pc.setLocalDescription(await pc.createAnswer());await waitIce(pc);
+    $('#ansOut').value=code(pc);$('#jst').textContent='응답 코드를 방장에게 보내고, 방장이 연결할 때까지 기다리세요.';
+  }catch(e){alert('초대 코드를 확인하세요')}
 };
-copySignalBtn.onclick=async()=>{try{await navigator.clipboard.writeText(signalOutput.value);setNotice('내 코드를 복사했습니다.');}catch{signalOutput.select();document.execCommand('copy');setNotice('내 코드를 복사했습니다.')}};
-resignBtn.onclick=resign; rematchBtn.onclick=requestRematch;
-$('resetUiBtn').onclick=()=>location.reload();
-$('helpBtn').onclick=()=>$('helpModal').classList.remove('hidden'); $('closeHelp').onclick=()=>$('helpModal').classList.add('hidden');
-$('helpModal').addEventListener('click',e=>{if(e.target.id==='helpModal')e.currentTarget.classList.add('hidden')});
+function gRecv(m){
+  if(m.t==='welcome')me.id=m.id;
+  else if(m.t==='state'){
+    const prev=S.phase;S=m.s;
+    if(S.phase==='count'&&prev!=='count'){pos=vel=0;fin=null;lastKey=null}
+    if(S.phase==='race'&&prev!=='race')raceStart=performance.now();
+    if(S.phase==='lobby'){pos=vel=0;fin=null}
+  }
+}
+setInterval(()=>{if(hostDC&&S.phase==='race')send(hostDC,{t:'pos',pos,fin})},80);
 
-buildGrid(); state=null; setConnection(false,'연결 안 됨');
-</script>
-</body>
-</html>
+/* ---------- 조작 ---------- */
+function tap(k){
+  if(S.phase!=='race'||me.spec||fin!=null||me.id==null||k===lastKey)return;
+  lastKey=k;vel=Math.min(12,vel+1.4);tilt=tilt>=0?-9:9;
+}
+addEventListener('keydown',e=>{
+  if(e.repeat||e.target.matches('input,textarea'))return;
+  if(e.code==='KeyA'||e.code==='ArrowLeft')tap('A');
+  else if(e.code==='KeyD'||e.code==='ArrowRight')tap('D');
+});
+['A','D'].forEach(k=>$('#k'+k).addEventListener('pointerdown',e=>{e.preventDefault();tap(k)}));
+
+/* ---------- 렌더 ---------- */
+const lanes=$('#lanes'),els={};
+function render(){
+  for(const id in els)if(!S.players[id]){els[id].root.remove();delete els[id]}
+  const order=Object.entries(S.players).filter(([,p])=>p.fin!=null).sort((a,b)=>a[1].fin-b[1].fin).map(e=>e[0]);
+  for(const id in S.players){
+    const p=S.players[id];let e=els[id];
+    if(!e){const root=document.createElement('div');root.className='lane';
+      root.innerHTML=`<div class="nm"></div><div class="fin"></div><img class="fish" src="${FISH}" alt=""><button class="win">🏆 우승 선언</button>`;
+      e=els[id]={root,nm:root.children[0],fin:root.children[1],fish:root.children[2],win:root.children[3]};
+      e.win.onclick=()=>pick(id);lanes.append(root)}
+    const mine=+id===me.id,ps=mine?pos:p.pos,f=mine?fin:p.fin;
+    e.nm.textContent=(mine?'⭐ ':'')+p.name;
+    e.fin.textContent=f!=null?`🏁 ${order.indexOf(id)+1}번째 · ${f}초`:Math.round(ps)+'%';
+    e.fish.style.setProperty('--p',ps);
+    e.fish.style.transform=mine?`rotate(${tilt}deg)`:'';
+    e.root.classList.toggle('won',S.winner==id);
+    e.win.hidden=!(me.host&&(S.phase==='race'||S.phase==='done'));
+  }
+  const w=S.players[S.winner];
+  $('#ov').textContent=S.phase==='count'?S.count:S.phase==='done'&&w?`🏆 ${w.name} 우승!`:S.phase==='race'?'A · D 연타!':'';
+  $('#bStart').hidden=!(me.host&&S.phase==='lobby');
+  $('#bReset').hidden=!(me.host&&(S.phase==='race'||S.phase==='done'));
+  $('#info').textContent=S.phase==='lobby'?(me.host?'참가자를 연결하고 시작을 누르세요':'방장이 시작하길 기다리는 중'):S.phase==='race'&&me.host?'골인한 복어 중에서 우승자를 골라주세요':'';
+  $('#kA').classList.toggle('next',lastKey==='D');$('#kD').classList.toggle('next',lastKey==='A');
+  $('#pad').hidden=me.spec;
+}
+let lt=performance.now();
+(function loop(t){
+  const dt=Math.min(.05,(t-lt)/1000);lt=t;
+  if(S.phase==='race'&&!me.spec&&fin==null&&me.id!=null){
+    vel*=Math.exp(-1.5*dt);pos+=vel*dt;
+    if(pos>=100){pos=100;vel=0;fin=+((t-raceStart)/1000).toFixed(2)}
+  }
+  if(me.host&&!me.spec&&S.players[0]){S.players[0].pos=pos;S.players[0].fin=fin}
+  if(!$('#game').hidden)render();
+  requestAnimationFrame(loop);
+})(lt);
+</script></body></html>
